@@ -2,6 +2,8 @@
 #include <Eigen>
 #include <math.h>
 #include <vector>
+#include <fstream>
+#include <sstream>
 using namespace std;
 using namespace Eigen ;
 class LogisticRegression
@@ -37,6 +39,7 @@ class LogisticRegression
     }
     void gradient_descent(const vector<Vector3d>&input_features,const vector<int>&y,double alpha,int iterations)
     {
+        
         int m=input_features.size();
         for (int i = 0; i < iterations; i++)
         {
@@ -61,22 +64,85 @@ class LogisticRegression
     }
 };
 
+
+void read_csv(const string& filename, vector<Vector3d>& inputs, vector<int>& labels)
+{
+    ifstream file(filename);
+    if (!file.is_open())
+    {
+        cout << "COULDN'T OPEN THE FILE!!" << endl;
+        return; // Exit the function if the file cannot be opened
+    }
+
+    string line;
+    getline(file, line); // Skip the header line
+
+    while (getline(file, line))
+    {
+        stringstream ss(line);
+        Vector3d input;
+        string field;
+        for (int i = 0; i < 3; i++)
+        {
+            if (getline(ss,field, ','))
+            {
+                input(i) = stod(field);
+            }
+            else
+            {
+                cout << "Missing features in line " << line << endl;
+            }
+        }
+
+        // Read label
+        if (getline(ss,field, ','))
+        {
+            labels.push_back(stoi(field)); // Convert to int and store in labels vector
+        }
+        else
+        {
+            cout << "Label is missing : " << line << endl;
+        }
+
+        inputs.push_back(input); // Store the input vector
+    }
+}
+
+
+
 int main()
 {
     LogisticRegression lr;
-    vector<Eigen::Vector3d> inputs = {
-        Eigen::Vector3d(1.0, 2.0, 3.0),  
-        Eigen::Vector3d(1.0, 4.0, 5.0), 
-        Eigen::Vector3d(1.0, 7.0, 8.0)   
-    };
-    vector<int> labels = {0, 1, 1};
-
-    lr.gradient_descent(inputs, labels, 0.01, 5000);
+    vector<Eigen::Vector3d> train_set;
+    vector<int> train_labels;
+    read_csv("classification_data.csv",train_set,train_labels);
+    lr.gradient_descent(train_set, train_labels, 0.01, 5000);
 
     cout<<"Learned thetas: \n" << lr.get_thethas()<<endl;
-    Eigen::Vector3d new_input(1.0, 7.0, 8.0);  
-    double prediction = lr.predict(new_input);
-    cout << "Prediction for new input: " << prediction <<endl;
+
+    vector<Eigen::Vector3d>test_set;  
+    vector<int>test_labels;
+    read_csv("classification_test_data.csv",test_set,test_labels);
+
+    double mse=0;
+    int m=test_labels.size();
+    for (int i = 0; i < m; i++)
+    {
+        double prediction=lr.predict(test_set[i]);
+        cout << "Prediction for new input: " << prediction <<endl;
+        if(prediction>0.5)
+        {
+            cout<<"Prediction result: Yes"<<endl;
+        }
+        else
+        {
+            cout<<"Prediction result: No"<<endl;
+        }
+        double err=prediction-test_labels[i];
+        mse+=pow(err,2);
+    }
+    mse=mse/m;
+    cout<<"Mean Sqaured Error (MSE) on model is : "<<mse<<endl;
 
     return 0;
 }
