@@ -1,2 +1,1 @@
-# Logistic-Regression
-In this program , i've implemented logistic regression from scratch in cpp using only eigen for matrix calculations.  It includes a sigmoid function, cost calculation, and gradient descent to train the model.
+In this program, I've implemented a logistic regression model from scratch in C++ using only Eigen for matrix calculations. It is trained on the Wisconsin Breast Cancer dataset. The program simulates the hypothesis function (sigmoid), computes the cost, and uses batch gradient ascent to train the model. It evaluates the performance using confusion matrix and F1 score. 
